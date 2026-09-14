@@ -1,0 +1,420 @@
+@import "tailwindcss";
+
+:root {
+  --background: #030014;
+  --foreground: #f1f5f9;
+
+  /* Default color theme: Aurora */
+  --accent-rgb: 217, 70, 239;
+  --accent2-rgb: 168, 85, 247;
+  --accent3-rgb: 34, 211, 238;
+  --accent4-rgb: 244, 114, 182;
+}
+
+[data-theme="aurora"] {
+  --accent-rgb: 217, 70, 239;
+  --accent2-rgb: 168, 85, 247;
+  --accent3-rgb: 34, 211, 238;
+  --accent4-rgb: 244, 114, 182;
+}
+
+[data-theme="ocean"] {
+  --accent-rgb: 14, 165, 233;
+  --accent2-rgb: 6, 182, 212;
+  --accent3-rgb: 45, 212, 191;
+  --accent4-rgb: 56, 189, 248;
+}
+
+[data-theme="sunset"] {
+  --accent-rgb: 249, 115, 22;
+  --accent2-rgb: 244, 63, 94;
+  --accent3-rgb: 251, 191, 36;
+  --accent4-rgb: 236, 72, 153;
+}
+
+[data-theme="emerald"] {
+  --accent-rgb: 16, 185, 129;
+  --accent2-rgb: 20, 184, 166;
+  --accent3-rgb: 163, 230, 53;
+  --accent4-rgb: 45, 212, 191;
+}
+
+[data-theme="royal"] {
+  --accent-rgb: 99, 102, 241;
+  --accent2-rgb: 168, 85, 247;
+  --accent3-rgb: 236, 72, 153;
+  --accent4-rgb: 129, 140, 248;
+}
+
+[data-mode="dark"] {
+  --background: #030014;
+  --foreground: #f1f5f9;
+}
+
+[data-mode="light"] {
+  --background: #f8fafc;
+  --foreground: #0f172a;
+}
+
+@theme inline {
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --font-sans: var(--font-geist-sans);
+  --font-mono: var(--font-geist-mono);
+}
+
+html {
+  scroll-behavior: smooth;
+}
+
+body {
+  background: var(--background);
+  color: var(--foreground);
+  transition: background-color 0.4s ease, color 0.4s ease;
+}
+
+::selection {
+  background: rgba(var(--accent-rgb), 0.35);
+  color: #ffffff;
+}
+
+::-webkit-scrollbar {
+  width: 10px;
+}
+
+::-webkit-scrollbar-track {
+  background: var(--background);
+}
+
+::-webkit-scrollbar-thumb {
+  background: linear-gradient(180deg, rgb(var(--accent2-rgb)), rgb(var(--accent3-rgb)));
+  border-radius: 9999px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: linear-gradient(180deg, rgb(var(--accent-rgb)), rgb(var(--accent3-rgb)));
+}
+
+/* ---------- Accent utility classes (theme-aware) ---------- */
+.text-accent {
+  color: rgb(var(--accent-rgb));
+}
+
+.text-accent-grad {
+  background-image: linear-gradient(
+    90deg,
+    rgb(var(--accent-rgb)),
+    rgb(var(--accent2-rgb)),
+    rgb(var(--accent3-rgb))
+  );
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+}
+
+.bg-accent-grad {
+  background-image: linear-gradient(90deg, rgb(var(--accent-rgb)), rgb(var(--accent3-rgb)));
+}
+
+.bg-accent-soft {
+  background-color: rgba(var(--accent-rgb), 0.08);
+}
+
+.border-accent {
+  border-color: rgba(var(--accent-rgb), 0.3);
+}
+
+.border-accent-strong {
+  border-color: rgba(var(--accent-rgb), 0.5);
+}
+
+.shadow-accent {
+  box-shadow: 0 0 30px -6px rgba(var(--accent-rgb), 0.8);
+}
+
+.shadow-accent-lg {
+  box-shadow: 0 0 40px -8px rgba(var(--accent-rgb), 0.9);
+}
+
+.dot-accent {
+  background-color: rgb(var(--accent-rgb));
+}
+
+/* ---------- Light mode overrides ---------- */
+[data-mode="light"] .bg-\[\#030014\] {
+  background-color: #f8fafc !important;
+}
+
+[data-mode="light"] .bg-slate-950,
+[data-mode="light"] .bg-slate-950\/70,
+[data-mode="light"] .bg-slate-950\/80,
+[data-mode="light"] .bg-slate-950\/95 {
+  background-color: rgba(248, 250, 252, 0.92) !important;
+}
+
+[data-mode="light"] .bg-slate-900,
+[data-mode="light"] .bg-slate-900\/80 {
+  background-color: rgba(255, 255, 255, 0.9) !important;
+}
+
+[data-mode="light"] .text-white {
+  color: #0f172a !important;
+}
+
+[data-mode="light"] .text-slate-100 {
+  color: #1e293b !important;
+}
+
+[data-mode="light"] .text-slate-200 {
+  color: #334155 !important;
+}
+
+[data-mode="light"] .text-slate-300 {
+  color: #475569 !important;
+}
+
+[data-mode="light"] .text-slate-400 {
+  color: #64748b !important;
+}
+
+[data-mode="light"] .text-slate-500 {
+  color: #94a3b8 !important;
+}
+
+[data-mode="light"] .text-slate-950 {
+  color: #ffffff !important;
+}
+
+[data-mode="light"] .bg-white\/5 {
+  background-color: rgba(15, 23, 42, 0.04) !important;
+}
+
+[data-mode="light"] .bg-white\/10 {
+  background-color: rgba(15, 23, 42, 0.06) !important;
+}
+
+[data-mode="light"] .bg-white\/\[0\.03\] {
+  background-color: rgba(15, 23, 42, 0.03) !important;
+}
+
+[data-mode="light"] .bg-white\/\[0\.05\] {
+  background-color: rgba(15, 23, 42, 0.05) !important;
+}
+
+[data-mode="light"] .bg-white\/\[0\.06\] {
+  background-color: rgba(15, 23, 42, 0.06) !important;
+}
+
+[data-mode="light"] .border-white\/5 {
+  border-color: rgba(15, 23, 42, 0.06) !important;
+}
+
+[data-mode="light"] .border-white\/10 {
+  border-color: rgba(15, 23, 42, 0.1) !important;
+}
+
+[data-mode="light"] .border-white\/15 {
+  border-color: rgba(15, 23, 42, 0.14) !important;
+}
+
+[data-mode="light"] .border-white\/20 {
+  border-color: rgba(15, 23, 42, 0.18) !important;
+}
+
+[data-mode="light"] .border-white\/30 {
+  border-color: rgba(15, 23, 42, 0.22) !important;
+}
+
+[data-mode="light"] .from-slate-800\/80 {
+  --tw-gradient-from: rgba(255, 255, 255, 0.85) !important;
+}
+
+[data-mode="light"] .to-slate-900\/80 {
+  --tw-gradient-to: rgba(226, 232, 240, 0.85) !important;
+}
+
+[data-mode="light"] svg[stroke="white"],
+[data-mode="light"] circle[stroke="white"] {
+  stroke: #0f172a;
+}
+
+/* Animated gradient text */
+@keyframes gradient-shift {
+  0%,
+  100% {
+    background-position: 0% 50%;
+  }
+  50% {
+    background-position: 100% 50%;
+  }
+}
+
+.animate-gradient-text {
+  background-size: 200% 200%;
+  animation: gradient-shift 6s ease infinite;
+}
+
+/* Floating blobs */
+@keyframes blob-float {
+  0%,
+  100% {
+    transform: translate(0, 0) scale(1);
+  }
+  33% {
+    transform: translate(4%, -6%) scale(1.08);
+  }
+  66% {
+    transform: translate(-3%, 4%) scale(0.95);
+  }
+}
+
+.animate-blob {
+  animation: blob-float 16s ease-in-out infinite;
+}
+
+.animate-blob-slow {
+  animation: blob-float 24s ease-in-out infinite;
+}
+
+.animate-blob-slower {
+  animation: blob-float 32s ease-in-out infinite reverse;
+}
+
+/* Shimmer sweep for cards */
+@keyframes shimmer-sweep {
+  0% {
+    transform: translateX(-120%) skewX(-15deg);
+  }
+  100% {
+    transform: translateX(220%) skewX(-15deg);
+  }
+}
+
+.shimmer-hover {
+  position: relative;
+  overflow: hidden;
+}
+
+.shimmer-hover::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(
+    100deg,
+    transparent 30%,
+    rgba(255, 255, 255, 0.15) 50%,
+    transparent 70%
+  );
+  transform: translateX(-120%) skewX(-15deg);
+  transition: none;
+  pointer-events: none;
+}
+
+.shimmer-hover:hover::after {
+  animation: shimmer-sweep 1s ease;
+}
+
+/* Gentle float for badges */
+@keyframes soft-float {
+  0%,
+  100% {
+    transform: translateY(0);
+  }
+  50% {
+    transform: translateY(-10px);
+  }
+}
+
+.animate-soft-float {
+  animation: soft-float 4s ease-in-out infinite;
+}
+
+/* Twinkling particles */
+@keyframes twinkle {
+  0%,
+  100% {
+    opacity: 0.2;
+    transform: scale(0.8);
+  }
+  50% {
+    opacity: 1;
+    transform: scale(1.2);
+  }
+}
+
+.animate-twinkle {
+  animation: twinkle 3s ease-in-out infinite;
+}
+
+/* Cartoon mascot animations */
+@keyframes mascot-bob {
+  0%,
+  100% {
+    transform: translateY(0) rotate(-2deg);
+  }
+  50% {
+    transform: translateY(-14px) rotate(2deg);
+  }
+}
+
+.animate-mascot-bob {
+  animation: mascot-bob 3.2s ease-in-out infinite;
+}
+
+@keyframes mascot-wave {
+  0%,
+  100% {
+    transform: rotate(0deg);
+  }
+  20% {
+    transform: rotate(-18deg);
+  }
+  40% {
+    transform: rotate(12deg);
+  }
+  60% {
+    transform: rotate(-14deg);
+  }
+  80% {
+    transform: rotate(8deg);
+  }
+}
+
+.animate-mascot-wave {
+  transform-origin: 85% 20%;
+  animation: mascot-wave 2.4s ease-in-out infinite;
+  animation-delay: 0.6s;
+}
+
+@keyframes mascot-blink {
+  0%,
+  92%,
+  100% {
+    transform: scaleY(1);
+  }
+  96% {
+    transform: scaleY(0.1);
+  }
+}
+
+.animate-mascot-blink {
+  transform-origin: center;
+  animation: mascot-blink 4.5s ease-in-out infinite;
+}
+
+@keyframes mascot-float-shadow {
+  0%,
+  100% {
+    transform: scaleX(1);
+    opacity: 0.25;
+  }
+  50% {
+    transform: scaleX(0.75);
+    opacity: 0.12;
+  }
+}
+
+.animate-mascot-shadow {
+  animation: mascot-float-shadow 3.2s ease-in-out infinite;
+}
+
