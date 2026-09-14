@@ -8,7 +8,7 @@ For production, this is a fully automated deploy: nginx (reverse proxy) + Caddy 
 
 **Local development** (no Docker):
 ```bash
-cp .env.example .env.local   # then fill in MONGODB_URI, generate AUTH_SECRET
+npm run env:create -- local  # writes .env.local (MongoDB URI/DB, auto-generates AUTH_SECRET)
 npm run admin:create         # create your first /admin login
 npm run dev                  # http://localhost:3000
 ```
@@ -37,28 +37,30 @@ npm run dev                  # http://localhost:3000
 
 These three things are needed whether you run via `npm run dev` or Docker:
 
-### 1. MongoDB connection
+### 1. MongoDB connection + Auth secret (one command)
 
-Get a connection string (a free [MongoDB Atlas](https://www.mongodb.com/cloud/atlas) cluster works fine — no manual database/collection creation needed, it's created automatically on first use). Put it in `.env.local` (create from `.env.example` if it doesn't exist yet):
+`npm run env:create` writes `.env.local` (local dev) or `.env.prod` (production, copied to the server — see [Deploy to production](#deploy-to-production)) interactively: it prompts for the MongoDB connection and public site URL, and auto-generates `AUTH_SECRET` via `npx auth secret` (the `auth` CLI is a devDependency, so this works offline after `npm install` too — falls back to an equally-valid locally generated secret if `npx` can't run at all).
+
+```bash
+npm run env:create -- local   # writes .env.local, used by `npm run dev` and docker-compose's env_file
+npm run env:create -- prod    # writes .env.prod, copy this one to the server (never git)
+npm run env:create            # omit the target and it prompts you for local/prod
+```
+
+Each prompt shows the current value (from an existing file) as its default — press Enter to keep it. Safe to re-run any time to update `MONGODB_URI`/`MONGODB_DB`/`NEXT_PUBLIC_SITE_URL`: an existing `AUTH_SECRET` is always preserved (rotating it would invalidate every logged-in admin session; delete the `AUTH_SECRET=` line from the file first if you deliberately want a new one generated).
+
+Get a MongoDB connection string from a free [MongoDB Atlas](https://www.mongodb.com/cloud/atlas) cluster (no manual database/collection creation needed — it's created automatically on first use).
+
+Never put real credentials in `.env.example` — it's committed to git. Real values only go in `.env.local`/`.env.prod` (both git-ignored, mode `600`).
+
+Prefer to edit by hand instead? Copy `.env.example` and fill it in yourself — `npx auth secret` still works standalone, just rename its `BETTER_AUTH_SECRET` output to `AUTH_SECRET`:
 
 ```bash
 cp .env.example .env.local
-```
-```
-MONGODB_URI=mongodb+srv://<user>:<password>@<cluster-host>/?appName=<app-name>
-MONGODB_DB=portfolio
+npx auth secret   # copy the printed value into .env.local as AUTH_SECRET=...
 ```
 
-Never put real credentials in `.env.example` — it's committed to git. Real values only go in `.env.local` (git-ignored).
-
-### 2. Auth secret
-
-```bash
-npx auth secret
-```
-Copy the printed value into `.env.local` as `AUTH_SECRET=...` (the CLI names it `BETTER_AUTH_SECRET` by default — rename it to `AUTH_SECRET`, since that's what this app's Auth.js config actually reads).
-
-### 3. At least one admin login
+### 2. At least one admin login
 
 Admin accounts live in `secrets/admin-users.json` (git-ignored — a JSON array of `{ email, passwordHash }`, never plaintext passwords), not in an env var:
 
@@ -82,7 +84,7 @@ npm run dev
 ## Prerequisites (Docker scenarios)
 
 - Docker Desktop/Engine installed and running
-- `.env.local` with `MONGODB_URI`, `MONGODB_DB`, and `AUTH_SECRET` set (see above) — `docker-compose.yml` loads it via `env_file`
+- `.env.local` with `MONGODB_URI`, `MONGODB_DB`, and `AUTH_SECRET` set (see above) — `docker-compose.yml` loads it via `env_file` on **whichever host runs `docker compose`** (so on a remote server, that host needs its own `.env.local` too — see [Deploy to production](#deploy-to-production) for how `.env.prod` fits in)
 - For production: a domain's DNS `A`/`AAAA` record pointing at this server's public IP, with ports `80`/`443` open to the internet
 
 ## Test locally first
@@ -117,7 +119,15 @@ That single command:
 7. Waits for Caddy to issue the Let's Encrypt certificate and for nginx to enable HTTPS
 8. Prints `https://your-domain.com` once it's live
 
-`.env.local` (with `MONGODB_URI`/`AUTH_SECRET`) must already exist before running this — copy it to the server the same way you would any other secret file (`scp`/`rsync`, never git). Re-running `./deploy.sh` (with or without arguments, once `.env` exists) redeploys with the same settings.
+`.env.local` (with `MONGODB_URI`/`AUTH_SECRET`) must already exist **on the server** before running this — `docker-compose.yml` only ever reads a file literally named `.env.local` via `env_file`, on whatever host runs `docker compose`. The recommended flow, keeping production secrets out of your local dev `.env.local`:
+
+```bash
+npm run env:create -- prod          # writes .env.prod locally (prompts for MongoDB URI, DB, site URL; auto-generates AUTH_SECRET)
+scp .env.prod user@server:/path/to/portfolio/.env.local   # transfer + rename in one step
+ssh user@server 'cd /path/to/portfolio && ./deploy.sh your-domain.com'
+```
+
+`scp`/`rsync` only, never git — `.env.prod`/`.env.local` are both git-ignored. Re-running `./deploy.sh` (with or without arguments, once `.env` exists) redeploys with the same settings.
 
 Optional: override the public site URL used in metadata (defaults to `https://<domain>`):
 

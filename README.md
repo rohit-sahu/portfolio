@@ -35,7 +35,7 @@ cp .env.example .env.local
 
 | Variable | Purpose | Default |
 |---|---|---|
-| `NEXT_PUBLIC_SITE_URL` | Canonical production URL, used for OG/Twitter cards, `sitemap.xml`, `robots.txt` | `https://rohitkumar.dev` |
+| `NEXT_PUBLIC_SITE_URL` | Canonical production URL, used for OG/Twitter cards, `sitemap.xml`, `robots.txt` | `https://rohitkumar.skytech.in` |
 | `MONGODB_URI` | Connection string for the resume content database (e.g. MongoDB Atlas free tier) | — required |
 | `MONGODB_DB` | Database name | `portfolio` |
 | `AUTH_SECRET` | Auth.js session signing secret — generate with `npx auth secret` | — required |

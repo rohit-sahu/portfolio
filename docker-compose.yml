@@ -6,7 +6,7 @@ services:
       args:
         # Inlined into the JS bundle at build time (see Dockerfile comment) —
         # runtime `environment:` below can't override this after the fact.
-        NEXT_PUBLIC_SITE_URL: ${NEXT_PUBLIC_SITE_URL:-https://rohitkumar.dev}
+        NEXT_PUBLIC_SITE_URL: ${NEXT_PUBLIC_SITE_URL:-https://rohitkumar.skytech.in}
     # Overridable so a pre-built image (e.g. pushed to ECR) can be pulled and
     # run as-is instead of building on the deploy target — set IMAGE to the
     # registry reference and use deploy.sh --pull instead of a plain build.
@@ -24,7 +24,7 @@ services:
       HOSTNAME: "0.0.0.0"
       # Kept for reference/inspection only — has no effect at runtime, the
       # real value is baked in via build.args above.
-      NEXT_PUBLIC_SITE_URL: ${NEXT_PUBLIC_SITE_URL:-https://rohitkumar.dev}
+      NEXT_PUBLIC_SITE_URL: ${NEXT_PUBLIC_SITE_URL:-https://rohitkumar.skytech.in}
       # File-based secret (never an env var), so the admin roster never shows
       # up in `docker inspect`/`docker compose config`. See secrets/admin-users.json.example.
       ADMIN_USERS_FILE: /run/secrets/admin_users

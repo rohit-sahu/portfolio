@@ -10,6 +10,7 @@
     "build": "next build",
     "start": "next start",
     "admin:create": "node scripts/create-admin.mjs",
+    "env:create": "node scripts/create-env.mjs",
     "tunnel:token": "node scripts/create-cloudflare-tunnel-token.mjs",
     "lint": "eslint",
     "type-check": "tsc --noEmit"
@@ -31,6 +32,7 @@
     "@types/node": "^20",
     "@types/react": "^19",
     "@types/react-dom": "^19",
+    "auth": "^1.7.4",
     "eslint": "^9",
     "eslint-config-next": "16.3.4",
     "tailwindcss": "^4",

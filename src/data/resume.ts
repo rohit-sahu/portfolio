@@ -1,8 +1,8 @@
 // Single source of truth for the deployed site URL (layout, robots, sitemap,
 // OG image all import from here). Keep DEFAULT_SITE_URL in sync with the
 // fallback in .env.example and docker-compose.yml (those can't import TS).
-export const DEFAULT_SITE_URL = "https://rohitkumar.dev";
-export const siteUrl = process.env.NEXT_PUBLIC_SITE_URL ?? DEFAULT_SITE_URL;
+export const DEFAULT_SITE_URL = "https://rohitkumar.skytech.in";
+export const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || DEFAULT_SITE_URL;
 export const siteHost = new URL(siteUrl).hostname;
 
 export type Profile = {

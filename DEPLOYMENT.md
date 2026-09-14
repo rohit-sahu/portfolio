@@ -26,7 +26,7 @@ Step-by-step instructions to take this portfolio from local development to a liv
    MONGODB_DB=portfolio
    AUTH_SECRET=            # generate with: npx auth secret
    ```
-   `NEXT_PUBLIC_SITE_URL` is used to generate absolute URLs for Open Graph/Twitter card images, `sitemap.xml`, `robots.txt`, and canonical links. If you skip it, it falls back to `https://rohitkumar.dev`, which is almost certainly not your domain.
+   `NEXT_PUBLIC_SITE_URL` is used to generate absolute URLs for Open Graph/Twitter card images, `sitemap.xml`, `robots.txt`, and canonical links. If you skip it, it falls back to `https://rohitkumar.skytech.in`, which is almost certainly not your domain.
 3. Create at least one `/admin` login (stored as a bcrypt hash in `secrets/admin-users.json`, git-ignored — not an env var):
    ```bash
    npm run admin:create
@@ -34,7 +34,7 @@ Step-by-step instructions to take this portfolio from local development to a liv
 
 | Variable | Purpose | Default |
 |---|---|---|
-| `NEXT_PUBLIC_SITE_URL` | Canonical production URL used in metadata/SEO | `https://rohitkumar.dev` |
+| `NEXT_PUBLIC_SITE_URL` | Canonical production URL used in metadata/SEO | `https://rohitkumar.skytech.in` |
 | `MONGODB_URI` | Connection string for the resume content database | — required |
 | `MONGODB_DB` | Database name | `portfolio` |
 | `AUTH_SECRET` | Auth.js session signing secret | — required |
