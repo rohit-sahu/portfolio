@@ -53,6 +53,8 @@ Requires an AWS account with ECR set up (repo created, IAM permissions for push/
 
 ```bash
 docker build -t rohit-portfolio:latest .
+or
+docker build -t rohit-portfolio:latest --build-arg NEXT_PUBLIC_SITE_URL=https://rohitkumar.skytech.in .
 docker save rohit-portfolio:latest | gzip > image.tar.gz
 scp image.tar.gz user@server:~/
 ssh user@server 'gunzip -c image.tar.gz | docker load'
