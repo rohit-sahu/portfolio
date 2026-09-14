@@ -73,6 +73,21 @@ set_env_var() {
 	fi
 }
 
+# Check for Node.js and npm, which are required for some setup tasks
+if ! command -v node >/dev/null 2>&1; then
+  echo "Node.js is required but not found. Install Node.js first: https://nodejs.org/en/download/" >&2
+  exit 1
+fi
+if ! command -v npm >/dev/null 2>&1; then
+  echo "npm is required but not found. Install npm first: https://www.npmjs.com/get-npm" >&2
+  exit 1
+fi
+# Install Node.js dependencies if package.json exists
+if [ -f "package.json" ]; then
+  echo "Installing Node.js dependencies..."
+  npm install
+fi
+
 LOCAL=0
 TUNNEL=0
 QUICK_TUNNEL=0
