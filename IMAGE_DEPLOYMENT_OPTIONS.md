@@ -57,7 +57,15 @@ or
 docker build -t rohit-portfolio:latest --build-arg NEXT_PUBLIC_SITE_URL=https://rohitkumar.skytech.in .
 docker save rohit-portfolio:latest | gzip > image.tar.gz
 scp image.tar.gz user@server:~/
+or
+scp -i "/path/to/private-key.pem" /path/to/local/image.tar.gz username@server_ip:/path/to/remote/directory/
+or
+scp -i "/path/to/private-key.pem" /path/to/local/image.tar.gz username@server_ip:/tmp
+In Server,
+ls -l /tmp/image.tar.gz
+sudo mv /tmp/image.tar.gz /var/www/portfolio/
 ssh user@server 'gunzip -c image.tar.gz | docker load'
+sudo docker images
 ```
 
 Then run `./deploy.sh your-domain.com` on the server with no `--pull`/`IMAGE` — the image is already loaded locally under the tag `docker-compose.yml` defaults to (`rohit-portfolio:latest`). No account/registry of any kind needed, at the cost of a manual transfer step per deploy.

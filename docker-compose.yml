@@ -44,7 +44,7 @@ services:
       # MONGODB_DB, AUTH_SECRET (see .env.example). These are read at
       # runtime, not build time, so unlike NEXT_PUBLIC_SITE_URL they don't
       # need a build arg.
-      - path: .env.local
+      - path: ${ENV_FILE_PATH:-.env.local}
         required: false
     healthcheck:
       test: ["CMD", "wget", "-qO-", "http://127.0.0.1:3000/robots.txt"]
