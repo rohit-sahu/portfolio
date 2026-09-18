@@ -2,176 +2,184 @@
 
 The public site reads its content from MongoDB (editable at `/admin`), so every scenario below — local dev included — needs a MongoDB connection and at least one admin login configured first.
 
-For production, this is a fully automated deploy: nginx (reverse proxy) + Caddy (ACME/TLS) + the Next.js app, all via Docker Compose. Optionally, a Cloudflare Tunnel for exposing the app with zero open inbound ports.
+This repo only builds/runs the Next.js app container itself (`web` in `docker-compose.yml`). TLS termination, the reverse proxy, and any Cloudflare Tunnel are provisioned separately in an infra repo that fronts this container — see [Reverse proxy / TLS](#reverse-proxy--tls-not-in-this-repo).
 
 ## Quick reference
 
-**Local development** (no Docker):
-```bash
-npm run env:create -- local  # writes .env.local (MongoDB URI/DB, auto-generates AUTH_SECRET)
-npm run admin:create         # create your first /admin login
-npm run dev                  # http://localhost:3000
-```
+| Scenario | Command |
+|---|---|
+| Local dev (no Docker) | `npm run dev` |
+| Local Docker test | `./deploy.sh` |
+| Production deploy, build on server | `./deploy.sh https://your-domain.com` |
+| Build + push to GHCR, don't run here | `./publish-ghcr.sh` |
+| Build + push to GHCR + run here too | `IMAGE=ghcr.io/<owner>/rohit-portfolio:latest ./deploy.sh --push` |
+| Pull a pre-built image + run here | `IMAGE=ghcr.io/<owner>/rohit-portfolio:latest ./deploy.sh --pull` |
 
-**Docker, without tunnel** (nginx + Caddy only):
-```bash
-./deploy.sh your-domain.com   # production, real Let's Encrypt cert
-./deploy.sh --local           # local test, self-signed cert
-```
+`--pull` and `--push` are mutually exclusive. Re-running `./deploy.sh` redeploys with the same settings. It also interactively prompts to create a missing admin login when needed — no manual steps required on a fresh checkout.
 
-**Docker, with named tunnel** (your own hostname, requires `secrets/cloudflare_tunnel_token` — see [below](#named-tunnel-your-own-hostname----tunnel)):
-```bash
-./deploy.sh --tunnel your-domain.com
-./deploy.sh --local --tunnel   # test the tunnel wiring locally
-```
+---
 
-**Docker, with quick tunnel** (random `*.trycloudflare.com` URL, no setup — see [below](#quick-tunnel-no-dashboardtoken-random-url----quick-tunnel)):
-```bash
-./deploy.sh --local --quick-tunnel
-./deploy.sh your-domain.com --quick-tunnel
-```
+## 1. Local development (no Docker)
 
-`--tunnel` and `--quick-tunnel` are mutually exclusive; `--local` combines with either. Re-running `./deploy.sh` with no arguments redeploys using whatever was saved in `.env` last time. `deploy.sh` will interactively prompt to create a missing admin login or Cloudflare token when needed (see below) — no manual steps required on a fresh checkout.
+Step by step:
 
-## Environment & secrets (required for every scenario)
-
-These three things are needed whether you run via `npm run dev` or Docker:
-
-### 1. MongoDB connection + Auth secret (one command)
-
-`npm run env:create` writes `.env.local` (local dev) or `.env.prod` (production, copied to the server — see [Deploy to production](#deploy-to-production)) interactively: it prompts for the MongoDB connection and public site URL, and auto-generates `AUTH_SECRET` via `npx auth secret` (the `auth` CLI is a devDependency, so this works offline after `npm install` too — falls back to an equally-valid locally generated secret if `npx` can't run at all).
-
-```bash
-npm run env:create -- local   # writes .env.local, used by `npm run dev` and docker-compose's env_file
-npm run env:create -- prod    # writes .env.prod, copy this one to the server (never git)
-npm run env:create            # omit the target and it prompts you for local/prod
-```
-
-Each prompt shows the current value (from an existing file) as its default — press Enter to keep it. Safe to re-run any time to update `MONGODB_URI`/`MONGODB_DB`/`NEXT_PUBLIC_SITE_URL`: an existing `AUTH_SECRET` is always preserved (rotating it would invalidate every logged-in admin session; delete the `AUTH_SECRET=` line from the file first if you deliberately want a new one generated).
-
-Get a MongoDB connection string from a free [MongoDB Atlas](https://www.mongodb.com/cloud/atlas) cluster (no manual database/collection creation needed — it's created automatically on first use).
-
-Never put real credentials in `.env.example` — it's committed to git. Real values only go in `.env.local`/`.env.prod` (both git-ignored, mode `600`).
-
-Prefer to edit by hand instead? Copy `.env.example` and fill it in yourself — `npx auth secret` still works standalone, just rename its `BETTER_AUTH_SECRET` output to `AUTH_SECRET`:
-
-```bash
-cp .env.example .env.local
-npx auth secret   # copy the printed value into .env.local as AUTH_SECRET=...
-```
-
-### 2. At least one admin login
-
-Admin accounts live in `secrets/admin-users.json` (git-ignored — a JSON array of `{ email, passwordHash }`, never plaintext passwords), not in an env var:
-
-```bash
-npm run admin:create
-```
-Follow the prompts (email, password, confirmation). Re-run it anytime to add another admin or change a password — it upserts by email and takes effect immediately, no restart needed (both `npm run dev` and the Docker container read the file live).
-
-## Local development
-
-Once the three prerequisites above are done:
-
-```bash
-npm run dev
-```
-- Public site: http://localhost:3000
-- Admin: http://localhost:3000/admin/login
-
-`ADMIN_USERS_FILE` can be left unset in `.env.local` — it defaults to `secrets/admin-users.json` relative to the project root.
-
-## Prerequisites (Docker scenarios)
-
-- Docker Desktop/Engine installed and running
-- `.env.local` with `MONGODB_URI`, `MONGODB_DB`, and `AUTH_SECRET` set (see above) — `docker-compose.yml` loads it via `env_file` on **whichever host runs `docker compose`** (so on a remote server, that host needs its own `.env.local` too — see [Deploy to production](#deploy-to-production) for how `.env.prod` fits in)
-- For production: a domain's DNS `A`/`AAAA` record pointing at this server's public IP, with ports `80`/`443` open to the internet
-
-## Test locally first
-
-No domain, DNS, or open ports needed — Caddy issues a self-signed certificate from its internal CA instead of a real one:
-
-```bash
-./deploy.sh --local
-```
-
-This starts the same stack on `https://localhost`. Browsers/curl will flag the certificate as untrusted (expected for a self-signed cert) — accept the browser warning, or:
-
-```bash
-curl -k https://localhost/
-```
-
-Use `./deploy.sh --local myapp.localhost` to test under a specific hostname. Run `docker compose down` when done, then move on to a real production deploy below.
-
-## Deploy to production
-
-```bash
-./deploy.sh your-domain.com
-```
-
-That single command:
-1. Checks Docker is installed and running
-2. Prompts to create `secrets/admin-users.json` (via `npm run admin:create`) if it's empty, and `secrets/cloudflare_tunnel_token` (via `npm run tunnel:token`) if `--tunnel` was passed and it's missing — skipped non-interactively, with a warning instead
-3. Saves `DOMAIN` (and `NEXT_PUBLIC_SITE_URL`) to `.env`
-4. Builds the images (`docker compose build`)
-5. Starts the stack (`docker compose up -d`)
-6. Waits for the `web` and `nginx` containers to report healthy
-7. Waits for Caddy to issue the Let's Encrypt certificate and for nginx to enable HTTPS
-8. Prints `https://your-domain.com` once it's live
-
-`.env.local` (with `MONGODB_URI`/`AUTH_SECRET`) must already exist **on the server** before running this — `docker-compose.yml` only ever reads a file literally named `.env.local` via `env_file`, on whatever host runs `docker compose`. The recommended flow, keeping production secrets out of your local dev `.env.local`:
-
-```bash
-npm run env:create -- prod          # writes .env.prod locally (prompts for MongoDB URI, DB, site URL; auto-generates AUTH_SECRET)
-scp .env.prod user@server:/path/to/portfolio/.env.local   # transfer + rename in one step
-ssh user@server 'cd /path/to/portfolio && ./deploy.sh your-domain.com'
-```
-
-`scp`/`rsync` only, never git — `.env.prod`/`.env.local` are both git-ignored. Re-running `./deploy.sh` (with or without arguments, once `.env` exists) redeploys with the same settings.
-
-Optional: override the public site URL used in metadata (defaults to `https://<domain>`):
-
-```bash
-./deploy.sh your-domain.com https://your-domain.com
-```
-
-## Optional: Cloudflare Tunnel
-
-Exposes the app through Cloudflare with no inbound ports open on this host at all (`nginx`'s `80`/`443` can stay closed to the internet). The tunnel connection is outbound-only and mutually authenticated; the token is passed via a Docker secret file, never an environment variable. Both tunnel modes are opt-in via flags — neither runs unless you pass one.
-
-### Named tunnel (your own hostname) — `--tunnel`
-
-1. In the [Cloudflare Zero Trust dashboard](https://one.dash.cloudflare.com/): Networks -> Tunnels -> Create a tunnel -> Docker, and copy the token value (not the whole install command).
-2. Save it locally (git-ignored, never committed) — either run `./deploy.sh --tunnel your-domain.com` and let it prompt you, or set it up yourself first:
+1. Install dependencies:
    ```bash
-   npm run tunnel:token
+   npm install
    ```
-3. In the same dashboard, under the tunnel's **Public Hostname** tab, set the Service to `http://web:3000` (routes straight to the app container over the private Docker network).
-4. Run with `--tunnel`:
+2. Create `.env.local` (MongoDB URI/DB, auto-generates `AUTH_SECRET`, prompts for site URL — defaults to `http://localhost:3000`):
    ```bash
-   ./deploy.sh --tunnel your-domain.com
-   ./deploy.sh --local --tunnel   # to test the wiring locally first
+   npm run env:create -- local
    ```
-   `--tunnel` fails fast with a clear error if `secrets/cloudflare_tunnel_token` still doesn't exist after the prompt (e.g. running non-interactively).
+   (See [Environment files explained](#environment-files-explained-env-env-local-env-prod) for exactly what this writes and why.)
+3. Create your first `/admin` login:
+   ```bash
+   npm run admin:create
+   ```
+4. Start the dev server:
+   ```bash
+   npm run dev
+   ```
+   - Public site: http://localhost:3000
+   - Admin: http://localhost:3000/admin/login
 
-There's no public URL printed in `cloudflared`'s logs — it's whatever hostname you set in step 3.
+`ADMIN_USERS_FILE` and `RESUME_CACHE_FILE` can be left unset in `.env.local` for local dev — they default to `secrets/admin-users.json` and `./data/resume-cache.json` relative to the project root.
 
-### Quick tunnel (no dashboard/token, random URL) — `--quick-tunnel`
+---
 
-For ad-hoc testing without setting anything up in Cloudflare:
+## 2. Testing locally with Docker
 
+Prerequisites:
+- Docker Desktop/Engine installed and running, with the `docker compose` plugin
+- `.env.local` already created (step 1.2 above) — `docker-compose.yml` loads it via `env_file` on whichever host runs `docker compose`
+
+Step by step:
+
+1. Run:
+   ```bash
+   ./deploy.sh
+   ```
+   This does, in order:
+   1. Checks `node`/`npm`/`docker`/`docker compose` are installed and the Docker daemon is running
+   2. Runs `npm install`
+   3. Prompts to create `secrets/admin-users.json` (via `npm run admin:create`) if it's still empty
+   4. Builds the image: `docker compose build`
+   5. Starts the container: `docker compose up -d`
+   6. Waits (up to 180s) for the `web` container's healthcheck to report `healthy`
+   7. Prints `http://127.0.0.1:3000` once it's live
+2. Smoke-test it directly (no reverse proxy is started by this repo):
+   ```bash
+   curl -I http://127.0.0.1:3000
+   ```
+3. Check logs/status any time:
+   ```bash
+   docker compose ps
+   docker compose logs -f web
+   ```
+4. Stop it:
+   ```bash
+   docker compose down
+   ```
+   The `resume_cache` named volume persists across `down`/`up` cycles.
+
+To test under a specific site URL:
 ```bash
-./deploy.sh --local --quick-tunnel
-./deploy.sh your-domain.com --quick-tunnel
+./deploy.sh https://your-domain.com
 ```
 
-This starts `cloudflared-quick` instead, which prints a random `https://<random>.trycloudflare.com` URL — find it with:
+---
+
+## 3. Building the production image
+
+Three ways to get the image built, depending on your workflow — see [IMAGE_DEPLOYMENT_OPTIONS.md](./IMAGE_DEPLOYMENT_OPTIONS.md) for the full comparison including Docker Hub/ECR/manual transfer.
+
+### 3a. Build directly on the deploy server (simplest, no registry)
 
 ```bash
-docker compose logs cloudflared-quick | grep trycloudflare.com
+./deploy.sh https://your-domain.com
+```
+`docker compose build` runs on that same machine, using the `Dockerfile` in this repo. No registry account needed. Best for a single server.
+
+### 3b. Build + push to GHCR from a separate machine (e.g. your laptop or CI)
+
+```bash
+./publish-ghcr.sh
+```
+Every setting (GitHub owner, PAT, image name/tag, site URL) can come from a CLI flag, an environment variable, a `.env.local`/`.env.prod` file, or an interactive prompt — see **[SCRIPT_INPUTS.md](./SCRIPT_INPUTS.md)** for the full reference table and examples of each. Quick examples:
+```bash
+./publish-ghcr.sh                                          # fully interactive, answers every prompt by hand
+GITHUB_OWNER=myuser GITHUB_TOKEN=ghp_xxx ./publish-ghcr.sh --tag v1.2.0   # no prompts, CI-friendly
+```
+Internally it sets `IMAGE`/`NEXT_PUBLIC_SITE_URL` env vars and runs the same `docker compose build` + `docker compose push web` that `deploy.sh` uses — so there's one build definition, not two. It does **not** start the container. Then, on the actual deploy target:
+```bash
+IMAGE=ghcr.io/<owner>/rohit-portfolio:latest ./deploy.sh --pull
 ```
 
-No auth, no persistence, URL changes every restart — fine for a quick demo, not for production. `--tunnel` and `--quick-tunnel` are mutually exclusive.
+### 3c. Build + push to GHCR + run, all on the same server
+
+If the server itself should build, keep a GHCR copy (for backup/reuse on other servers), and serve the site immediately:
+```bash
+IMAGE=ghcr.io/<owner>/rohit-portfolio:latest ./deploy.sh --push
+```
+This builds locally (`docker compose build`), logs in to the registry (reuses an existing `docker login` session, or set `GHCR_USER`/`GHCR_TOKEN` env vars for a non-interactive login), pushes with `docker compose push web`, then starts the container as usual.
+
+---
+
+## 4. Deploy to production
+
+Step by step, once you have a server with Docker + DNS pointed at it (see [PRODUCTION_DEPLOYMENT.md](./PRODUCTION_DEPLOYMENT.md) for the full ordered checklist):
+
+1. Get the code onto the server:
+   ```bash
+   git clone <your-repo-url> portfolio
+   cd portfolio
+   ```
+2. Create production secrets **locally** (keeps them out of your dev `.env.local`):
+   ```bash
+   npm run env:create -- prod          # writes .env.prod (prompts for MongoDB URI, DB, site URL; auto-generates AUTH_SECRET)
+   ```
+3. Copy it to the server, renaming it to `.env.local` (the only filename `docker-compose.yml`'s `env_file:` reads by default):
+   ```bash
+   scp .env.prod user@server:/path/to/portfolio/.env.local
+   ```
+4. Create the admin login **on the server** (or `scp` an existing `secrets/admin-users.json` over):
+   ```bash
+   ssh user@server 'cd /path/to/portfolio && npm run admin:create'
+   ```
+5. Deploy — pick one of 3a/3b+pull/3c from [section 3](#3-building-the-production-image) above, e.g.:
+   ```bash
+   ssh user@server 'cd /path/to/portfolio && ./deploy.sh https://your-domain.com'
+   ```
+6. Point your infra repo's reverse proxy at `http://127.0.0.1:3000` on that server (see [section 5](#5-reverse-proxy--tls-not-in-this-repo)).
+
+`scp`/`rsync` only for `.env.prod`/`.env.local` — never git, both are gitignored. Re-running `./deploy.sh` redeploys with the same settings.
+
+---
+
+## 5. Reverse proxy / TLS (not in this repo)
+
+This repo only starts the `web` container, published on `127.0.0.1:3000` by default (override with `HOST_BIND`/`HOST_PORT`). Fronting it with a reverse proxy (nginx/Caddy) for TLS termination and your custom domain, and/or a Cloudflare Tunnel for zero-open-ports exposure, is handled by a separate infra repo that manages those concerns for all services on the host. Point that proxy's upstream at `http://127.0.0.1:3000` on this host.
+
+---
+
+## Environment files explained (`.env`, `.env.local`, `.env.prod`)
+
+| File | How it's created | Read by | Committed to git? |
+|---|---|---|---|
+| `.env.example` | Hand-written template, placeholder values only | Nothing at runtime — reference/copy source | Yes |
+| `.env.local` | `npm run env:create -- local`, or `cp .env.example .env.local` by hand | `npm run dev` (Next.js convention) **and** `docker-compose.yml`'s `env_file:` on whichever host runs `docker compose` | No (gitignored, mode `600`) |
+| `.env.prod` | `npm run env:create -- prod` | Nothing directly — you `scp`/copy it to the server **renamed to `.env.local`** (see [section 4](#4-deploy-to-production)) | No (gitignored, mode `600`) |
+| `.env` | Not generated/used by the current scripts | — | — |
+
+`scripts/create-env.mjs` (`npm run env:create`) does the following:
+1. Takes `local` or `prod` as an argument (or prompts if omitted) to pick the target file and its defaults (`http://localhost:3000` vs `https://your-domain.com`).
+2. Prompts for `MONGODB_URI`, `MONGODB_DB` (default `portfolio`), `NEXT_PUBLIC_SITE_URL` — pressing Enter on an existing file keeps its current value.
+3. Generates `AUTH_SECRET` via `npx auth secret` on first write only (falls back to a locally generated secret if offline); **always preserves an existing `AUTH_SECRET`** on re-runs, since rotating it invalidates every active admin session.
+4. Writes the file with `chmod 600`.
+
+`secrets/admin-users.json` is separate and not part of any `.env*` file — see `npm run admin:create` in [Managing admin logins](#managing-admin-logins).
+
+The deploy/publish scripts (`deploy.sh`, `deploy 2.sh`, `publish-ghcr.sh`, `publish-ghcr 2.sh`) also read `.env.local`/`.env.prod` as one of their fallback input sources (via `--env-file`) — see **[SCRIPT_INPUTS.md](./SCRIPT_INPUTS.md)** for exactly how that works alongside CLI flags and prompts.
 
 ## Managing admin logins
 
@@ -181,17 +189,13 @@ Add, update, or rotate an admin's password at any time — works identically for
 npm run admin:create
 ```
 
-To remove an admin, edit `secrets/admin-users.json` directly and delete their entry.
+Follow the prompts (email, password, confirmation). It upserts by email — re-running for the same email updates their password. To remove an admin, edit `secrets/admin-users.json` directly and delete their entry. Passwords are bcrypt-hashed before being written; the plaintext is never logged or stored.
 
 ## Checking status / logs
 
 ```bash
 docker compose ps
-docker compose logs -f caddy              # certificate issuance/renewal
-docker compose logs -f nginx              # reverse proxy
-docker compose logs -f web                # app
-docker compose logs -f cloudflared        # named tunnel (if enabled)
-docker compose logs -f cloudflared-quick  # quick tunnel (if enabled)
+docker compose logs -f web
 ```
 
 ## Stopping
@@ -200,5 +204,4 @@ docker compose logs -f cloudflared-quick  # quick tunnel (if enabled)
 docker compose down
 ```
 
-Certificates persist in the `caddy_data` volume, so stopping/starting the stack again does not require re-issuing them.
-
+The `resume_cache` volume (local read-through cache for resume content + downloaded profile photo) persists across restarts.

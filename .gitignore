@@ -1,5 +1,7 @@
 # See https://help.github.com/articles/ignoring-files/ for more about ignoring files.
-
+.vscode
+.idea
+image*.*tar.gz
 # dependencies
 /node_modules
 /.pnp
@@ -34,7 +36,7 @@ yarn-error.log*
 .env*
 !.env.example
 
-# secrets (docker compose secrets, e.g. cloudflare tunnel token)
+# secrets (docker compose secrets, e.g. admin login roster)
 /secrets/*
 !/secrets/*.example
 

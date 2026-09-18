@@ -98,7 +98,7 @@ Choose the option that matches your hosting target.
 
 ### Option B — Docker (any VPS / Node host / Kubernetes)
 
-The project already includes a multi-stage `Dockerfile` producing a minimal, self-contained server (via `output: "standalone"` in `next.config.ts`), plus a fully-automated `docker compose` stack (nginx + Caddy + the app, optional Cloudflare Tunnel) — see **[RUNNING.md](./RUNNING.md)** for the one-command `./deploy.sh your-domain.com` path, which is the recommended way to run this project in Docker.
+The project already includes a multi-stage `Dockerfile` producing a minimal, self-contained server (via `output: "standalone"` in `next.config.ts`), plus a `docker-compose.yml` that builds/runs just the app container — see **[RUNNING.md](./RUNNING.md)** for the one-command `./deploy.sh` path, which is the recommended way to run this project in Docker. TLS termination, the reverse proxy, and any Cloudflare Tunnel are handled separately, in an infra repo that fronts this container (see [Step 4](#step-4--tls--reverse-proxy-non-vercel-only)).
 
 To run the bare image manually instead (e.g. behind your own existing reverse proxy/orchestrator):
 

@@ -23,7 +23,7 @@ npm run dev                  # http://localhost:3000
 npm run build && npm run start   # production
 ```
 
-See **[RUNNING.md](./RUNNING.md)** for every way to run this app (local dev, Docker, with/without a Cloudflare Tunnel) and full secrets setup.
+See **[RUNNING.md](./RUNNING.md)** for every way to run this app (local dev, Docker) and full secrets setup. TLS/reverse proxy/Cloudflare Tunnel are managed in a separate infra repo — this repo only runs the app container.
 
 The original resume (`Rohit_Resume.pdf`) is served from `/public` and downloadable via the "Resume" button.
 
@@ -52,13 +52,13 @@ npm run build       # production build (also runs type-checking)
 
 ## Deployment
 
-See **[PRODUCTION_DEPLOYMENT.md](./PRODUCTION_DEPLOYMENT.md)** for a single step-by-step checklist from a fresh server to a live site. See **[RUNNING.md](./RUNNING.md)** for every run scenario (local dev, Docker, with/without Cloudflare Tunnel), and **[DEPLOYMENT.md](./DEPLOYMENT.md)** for Vercel/plain-Node alternatives.
+See **[PRODUCTION_DEPLOYMENT.md](./PRODUCTION_DEPLOYMENT.md)** for a single step-by-step checklist from a fresh server to a live site. See **[RUNNING.md](./RUNNING.md)** for every run scenario (local dev, Docker), and **[DEPLOYMENT.md](./DEPLOYMENT.md)** for Vercel/plain-Node alternatives.
 
 Quick reference:
 
 | Option | Best for | Command |
 |---|---|---|
-| Docker (`./deploy.sh`) | Self-hosted VPS, full stack incl. TLS — see [RUNNING.md](./RUNNING.md) | `./deploy.sh your-domain.com` |
+| Docker (`./deploy.sh`) | Self-hosted VPS, app container only — TLS/reverse proxy handled by a separate infra repo, see [RUNNING.md](./RUNNING.md) | `./deploy.sh https://your-domain.com` |
 | Vercel | Fastest, zero-config, auto HTTPS/CDN — `/admin` needs extra setup, see [DEPLOYMENT.md](./DEPLOYMENT.md) | Import repo at [vercel.com/new](https://vercel.com/new) |
 | Plain Node | Bare VPS without Docker | `npm ci && npm run build && npm run start` |
 

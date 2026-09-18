@@ -1,8 +1,8 @@
 #!/usr/bin/env bash
-# Installs Node.js (needed only to run scripts/create-admin.mjs and
-# scripts/create-cloudflare-tunnel-token.mjs on the host — the app itself
-# runs from the pulled Docker image, not from Node on this machine).
-# Idempotent — safe to re-run. Supports Amazon Linux 2/2023 and Ubuntu/Debian.
+# Installs Node.js (needed only to run scripts/create-admin.mjs on the host
+# — the app itself runs from the pulled Docker image, not from Node on this
+# machine). Idempotent — safe to re-run. Supports Amazon Linux 2/2023 and
+# Ubuntu/Debian.
 set -euo pipefail
 
 NODE_MAJOR="${NODE_MAJOR:-20}"

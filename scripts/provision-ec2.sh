@@ -1,8 +1,10 @@
 #!/usr/bin/env bash
 # Run once on a fresh EC2 instance to get it ready for `deploy.sh`. Only
 # orchestrates: installing Docker and syncing this repo. Secrets are left to
-# deploy.sh (npm run admin:create / tunnel:token), and running the stack is
-# left to deploy.sh too — this script doesn't touch either.
+# deploy.sh (npm run admin:create), and running the app container is left to
+# deploy.sh too — this script doesn't touch either. Note: the reverse
+# proxy/TLS/Cloudflare Tunnel for this host are provisioned by the separate
+# infra repo, not here.
 #
 # Usage:
 #   REPO_URL=git@github.com:you/portfolio-6.git ./scripts/provision-ec2.sh
@@ -23,8 +25,8 @@ install_docker
 install_node
 sync_repo
 
-# Only bcryptjs/readline are needed to run admin:create/tunnel:token — the
-# app itself runs from the pulled image, so skip devDependencies here.
+# Only bcryptjs/readline are needed to run admin:create — the app itself
+# runs from the pulled image, so skip devDependencies here.
 echo "==> Installing script dependencies (npm ci --omit=dev) in $TARGET_DIR..."
 npm ci --omit=dev --prefix "$TARGET_DIR"
 
@@ -33,7 +35,7 @@ cat <<EOF
 ==> Provisioning complete.
 ==> Next steps, from $TARGET_DIR:
       cd "$TARGET_DIR"
-      npm run tunnel:token   # if using --tunnel and no token secret yet
       npm run admin:create   # if secrets/admin-users.json has no users yet
-      IMAGE=<your-ecr-image> ./deploy.sh --pull your-domain.com
+      IMAGE=ghcr.io/<owner>/rohit-portfolio:latest ./deploy.sh --pull
+==> Then point your infra repo's reverse proxy at http://127.0.0.1:3000 on this host.
 EOF
