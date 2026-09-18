@@ -9,8 +9,8 @@
     "dev": "next dev",
     "build": "next build",
     "start": "next start",
-    "admin:create": "node scripts/create-admin.mjs",
-    "env:create": "node scripts/create-env.mjs",
+    "admin:create": "node scripts/node/create-admin.mjs",
+    "env:create": "node scripts/node/create-env.mjs",
     "lint": "eslint",
     "type-check": "tsc --noEmit"
   },

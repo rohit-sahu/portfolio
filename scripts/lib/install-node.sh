@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# Installs Node.js (needed only to run scripts/create-admin.mjs on the host
+# Installs Node.js (needed only to run scripts/node/create-admin.mjs on the host
 # — the app itself runs from the pulled Docker image, not from Node on this
 # machine). Idempotent — safe to re-run. Supports Amazon Linux 2/2023 and
 # Ubuntu/Debian.

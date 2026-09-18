@@ -20,7 +20,7 @@ import crypto from "node:crypto";
 import { createPrompter } from "./lib/prompt.mjs";
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
-const ROOT = path.join(__dirname, "..");
+const ROOT = path.join(__dirname, "..", "..");
 
 const TARGETS = {
   local: {

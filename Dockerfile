@@ -1,7 +1,7 @@
 # Container-internal working directory. Rarely needs to change — override
 # only if it conflicts with something else in your infra. Must be repeated
 # as `ARG APP_DIR` in every stage below (build args don't cross FROM lines).
-ARG APP_DIR=/portfolio
+ARG APP_DIR=/opt/portfolio
 
 # --- Dependencies stage ---
 FROM node:20-alpine AS deps
