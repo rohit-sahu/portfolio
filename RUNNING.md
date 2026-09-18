@@ -171,7 +171,7 @@ This repo only starts the `web` container, published on `127.0.0.1:3000` by defa
 | `.env.prod` | `npm run env:create -- prod` | Nothing directly — you `scp`/copy it to the server **renamed to `.env.local`** (see [section 4](#4-deploy-to-production)) | No (gitignored, mode `600`) |
 | `.env` | Not generated/used by the current scripts | — | — |
 
-`scripts/create-env.mjs` (`npm run env:create`) does the following:
+`scripts/node/create-env.mjs` (`npm run env:create`) does the following:
 1. Takes `local` or `prod` as an argument (or prompts if omitted) to pick the target file and its defaults (`http://localhost:3000` vs `https://your-domain.com`).
 2. Prompts for `MONGODB_URI`, `MONGODB_DB` (default `portfolio`), `NEXT_PUBLIC_SITE_URL` — pressing Enter on an existing file keeps its current value.
 3. Generates `AUTH_SECRET` via `npx auth secret` on first write only (falls back to a locally generated secret if offline); **always preserves an existing `AUTH_SECRET`** on re-runs, since rotating it invalidates every active admin session.
