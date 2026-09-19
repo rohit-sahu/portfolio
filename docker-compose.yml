@@ -15,7 +15,7 @@ services:
     # publish-ghcr.sh) can be pulled and run as-is instead of building on the
     # deploy target — set IMAGE to the registry reference and use
     # deploy.sh --pull instead of a plain build.
-    image: ${IMAGE:-rohit-portfolio:latest}
+    image: ${IMAGE:-ghcr.io/rohit-sahu/rohit-portfolio:latest}
     restart: unless-stopped
     # Published on the host so an external reverse proxy (Caddy/nginx/
     # Cloudflare Tunnel — managed in the separate infra repo) can reach it.
