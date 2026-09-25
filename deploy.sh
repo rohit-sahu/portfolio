@@ -218,6 +218,12 @@ if ! json_array_nonempty "$ADMIN_USERS_FILE"; then
 	if ! json_array_nonempty "$ADMIN_USERS_FILE"; then
 		echo "WARNING: $ADMIN_USERS_FILE has no admin users yet; /admin will be unreachable until you run: npm run admin:create" >&2
 	fi
+elif [ -t 0 ]; then
+	manage_admins_ans=""
+	read -p "==> Manage /admin users (add/update/remove/list) now? [y/N] " manage_admins_ans
+	if [[ "$manage_admins_ans" =~ ^[Yy] ]]; then
+		npm run --silent admin:create
+	fi
 fi
 
 if ! command -v docker >/dev/null 2>&1; then

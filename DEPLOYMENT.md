@@ -191,7 +191,15 @@ server {
         proxy_set_header Connection 'upgrade';
         proxy_set_header Host $host;
         proxy_set_header X-Real-IP $remote_addr;
-        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+        # $remote_addr, not $proxy_add_x_forwarded_for — this nginx is the
+        # first hop from the internet, so a client-supplied X-Forwarded-For
+        # must be overwritten, never appended-to (appending would let an
+        # attacker spoof the IP the app sees for its /admin IP allowlist and
+        # rate limiting — see src/lib/client-ip.ts). If you put Cloudflare
+        # (proxied/orange-cloud) in front of this nginx instead, use
+        # ngx_http_realip_module with Cloudflare's IP ranges and
+        # CF-Connecting-IP — see README.md.
+        proxy_set_header X-Forwarded-For $remote_addr;
         proxy_set_header X-Forwarded-Proto $scheme;
         proxy_cache_bypass $http_upgrade;
     }
@@ -202,6 +210,18 @@ Get a free TLS certificate with [Certbot](https://certbot.eff.org/):
 ```bash
 sudo certbot --nginx -d your-domain.com -d www.your-domain.com
 ```
+
+### If Cloudflare (proxied DNS) sits in front of this nginx
+
+Add to the `http {}` block (or a separate conf file included from it) so `$remote_addr` reflects the real visitor instead of Cloudflare's edge IP — update the IP ranges periodically from https://www.cloudflare.com/ips-v4 / `-v6`:
+```nginx
+set_real_ip_from 173.245.48.0/20;
+set_real_ip_from 103.21.244.0/22;
+# ... add all current Cloudflare ranges ...
+real_ip_header CF-Connecting-IP;
+real_ip_recursive on;
+```
+Also restrict inbound 443 to Cloudflare's IP ranges only (security group/firewall), so nobody can bypass Cloudflare and hit this nginx directly with a forged header.
 
 ---
 

@@ -2,7 +2,11 @@ import "server-only";
 import { readFile } from "node:fs/promises";
 import path from "node:path";
 
-export type AdminUser = { email: string; passwordHash: string };
+// totpSecret, when present, is NOT the raw base32 TOTP secret — it's the
+// AES-256-GCM-encrypted form produced by encryptTotpSecret() (see
+// src/lib/totp.ts). Decrypt with decryptTotpSecret() before use; never log
+// or return it as-is.
+export type AdminUser = { email: string; passwordHash: string; totpSecret?: string };
 
 const DEFAULT_PATH = path.join(process.cwd(), "secrets", "admin-users.json");
 
@@ -20,10 +24,12 @@ export async function loadAdminUsers(): Promise<AdminUser[]> {
     const raw = await readFile(/* turbopackIgnore: true */ filePath, "utf8");
     const parsed: unknown = JSON.parse(raw);
     if (!Array.isArray(parsed)) return [];
-    return parsed.filter(
-      (u): u is AdminUser =>
-        !!u && typeof u.email === "string" && typeof u.passwordHash === "string"
-    );
+    return parsed
+      .filter(
+        (u): u is AdminUser =>
+          !!u && typeof u.email === "string" && typeof u.passwordHash === "string"
+      )
+      .map((u) => (typeof u.totpSecret === "string" ? u : { email: u.email, passwordHash: u.passwordHash }));
   } catch (err) {
     console.error(`Failed to read admin users file at ${filePath}:`, err);
     return [];

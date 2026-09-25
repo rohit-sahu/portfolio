@@ -1,5 +1,6 @@
 import { auth, signOut } from "@/auth";
 import { redirect } from "next/navigation";
+import Link from "next/link";
 import { getResumeData } from "@/lib/resume-data";
 import ProfileEditor from "./sections/ProfileEditor";
 import SummaryEditor from "./sections/SummaryEditor";
@@ -22,19 +23,27 @@ export default async function AdminPage() {
             <h1 className="text-2xl font-bold text-white">Resume Admin</h1>
             <p className="text-sm text-slate-400">Signed in as {session.user?.email}</p>
           </div>
-          <form
-            action={async () => {
-              "use server";
-              await signOut({ redirectTo: "/admin/login" });
-            }}
-          >
-            <button
-              type="submit"
+          <div className="flex items-center gap-3">
+            <Link
+              href="/admin/security"
               className="rounded-lg border border-white/10 px-4 py-2 text-sm text-slate-300 transition hover:bg-white/5"
             >
-              Sign out
-            </button>
-          </form>
+              Security
+            </Link>
+            <form
+              action={async () => {
+                "use server";
+                await signOut({ redirectTo: "/admin/login" });
+              }}
+            >
+              <button
+                type="submit"
+                className="rounded-lg border border-white/10 px-4 py-2 text-sm text-slate-300 transition hover:bg-white/5"
+              >
+                Sign out
+              </button>
+            </form>
+          </div>
         </header>
 
         <ProfileEditor initialProfile={data.profile} />

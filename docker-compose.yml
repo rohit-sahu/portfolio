@@ -52,9 +52,10 @@ services:
       - resume_cache:${APP_DIR:-/opt/portfolio}/data
     env_file:
       # Also carries the server-only secrets for /admin: MONGODB_URI,
-      # MONGODB_DB, AUTH_SECRET (see .env.example). These are read at
-      # runtime, not build time, so unlike NEXT_PUBLIC_SITE_URL they don't
-      # need a build arg.
+      # MONGODB_DB, AUTH_SECRET, ADMIN_SECRETS_KEY (2FA encryption key),
+      # ADMIN_TOTP_ISSUER, ADMIN_IP_ALLOWLIST (see .env.example). These are
+      # read at runtime, not build time, so unlike NEXT_PUBLIC_SITE_URL they
+      # don't need a build arg.
       - path: ${ENV_FILE_PATH:-.env.local}
         required: false
     healthcheck:
